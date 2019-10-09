@@ -14,12 +14,12 @@ def parse_context(text):
     spacy.prefer_gpu()
     nlp = spacy.load('en_core_web_sm')
     doc = nlp(text)
-    return_out = [text]
+    #return_out = [text]
+    return_out = []
     for token in doc:
 
-        if token.dep_ != "punct":
             
-            return_out.append(token.pos_)
+        return_out.append(token.pos_)
     
     return return_out
 
@@ -104,13 +104,18 @@ def multi_parse(input_array):
 
         for i in range(0, a_number, 4):
 
+                
             if __name__=='__main__':
                 manager = multiprocessing.Manager()
                 return_dict = manager.dict()
                 jobs = []
+                
+                in_sec = []
+                
                 for j in range(0, 4):
                     
                     sub_sec = input_array[i+j]
+                    in_sec.append(sub_sec)
                     p = multiprocessing.Process(target=thread_1, args=(sub_sec, i+j, return_dict))
                     
                     jobs.append(p)
@@ -120,32 +125,22 @@ def multi_parse(input_array):
                     proc.join()
                 
                 final_out = return_dict.values()
-                parsed_out.append(Reverse(final_out))
                 
-
+                
+                parsed_out.append(final_out[0])
+                parsed_out.append(final_out[1])
+                parsed_out.append(final_out[2])
+                parsed_out.append(final_out[3])
 
 
 
     elif a_number < 4:
 
         for i in range(0, a_number):
-            if __name__=='__main__':
-                manager = multiprocessing.Manager()
-                return_dict = manager.dict()
-                jobs = []
-                for j in range(0, a_number):
-                    
-                    sub_sec = input_array[i+j]
-                    p = multiprocessing.Process(target=thread_1, args=(sub_sec, i+j, return_dict))
-                    
-                    jobs.append(p)
-                    p.start()
-                
-                for proc in jobs:
-                    proc.join()
-                
-                final_out = return_dict.values()
-                parsed_out.append(Reverse(final_out))
+
+            parsed_out.append(recursive_call(input_array[i]))
+
+
 
     else:
         
@@ -179,32 +174,13 @@ def multi_parse(input_array):
                 parsed_out.append(final_out[1])
                 parsed_out.append(final_out[2])
                 parsed_out.append(final_out[3])
-
-
-
+            
 
         for i in range(sub_range, a_number):
-            if __name__=='__main__':
-                manager = multiprocessing.Manager()
-                return_dict = manager.dict()
-                jobs = []
-                for j in range(0, a_number%4):
-                    
-                    sub_sec = input_array[i+j]
-                    p = multiprocessing.Process(target=thread_1, args=(sub_sec, i+j, return_dict))
-                    
-                    jobs.append(p)
-                    p.start()
-                
-                for proc in jobs:
-                    proc.join()
-                
-                final_out = return_dict.values()
-                parsed_out.append(Reverse(final_out))
 
+            parsed_out.append(recursive_call(input_array[i]))
 
     return parsed_out
-
 
 
 
@@ -226,6 +202,38 @@ def telescope_comments(this_level):
 
 super_array = []
 
+def tree_comments(this_level):
+    return_out = [] 
+    if len(this_level) > 1:
+
+        for j in range(len(this_level[1])):
+
+
+            if len(this_level[1][j]) > 1:
+                if isinstance(this_level[1][j], list):
+                    
+                    print("Comment:",this_level[0][0], "\n     Replies to with complex comment", this_level[1][j])
+                    
+                    tree_comments(this_level[1][j])
+                #print(this_level[1][j])
+                #tree_comments(this_level[1][j])
+            elif len(this_level[0]) > 1:
+                return_out.append(this_level[0][0])
+                return_out.append(this_level[1][j][0])
+                print("Comment:",this_level[0][0], "\n     Replies to with ", this_level[1][j][0])
+                sub_out = tree_comments(this_level[1][j])
+                for k in range(len(sub_out)):
+                    return_out.append(sub_out[k])
+            else:
+                return_out.append(this_level[0][0])
+                return_out.append(this_level[1][j][0])
+                print("Comment:",this_level[0][0], "\n     Replies to with ", this_level[1][j][0])
+                sub_out = tree_comments(this_level[1][j])
+                for k in range(len(sub_out)):
+        
+                    return_out.append(sub_out[k])
+    return return_out
+
 
 for submission in subreddit.top(limit=1):
     print(submission.title)
@@ -240,10 +248,6 @@ for submission in subreddit.top(limit=1):
 
 
     
-    for i in range(len(super_array)):
-        print("0000", len(super_array[i]))
-                
-        print(super_array[i])
 
     
     out_data = multi_parse(super_array)
@@ -257,7 +261,15 @@ for submission in subreddit.top(limit=1):
     
    
     for i in range(len(out_data)):
-        print(".")
+    
+        print("=========================================")
+        tree_comments(out_data[i])
+        """
+        if len(out_data[i]) > 1:
+            for j in range(len(out_data[i][1])):
+                print("!", j)
+                print(out_data[i][1][j])
+        """
+        print("=========================================")
 
-        print(out_data[i])
 
